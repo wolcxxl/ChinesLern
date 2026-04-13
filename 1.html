@@ -1,1 +1,404 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Китайский Язык: Бесконечная Практика</title>
+    <!-- Подключение React и Babel для JSX -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Подключение Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Интуитивно приятный шрифт и тени для подсознательного запоминания */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500;700;900&family=Nunito:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #0f172a;
+            color: white;
+            overflow-x: hidden;
+        }
 
+        .zh-text {
+            font-family: 'Noto Sans SC', sans-serif;
+            text-shadow: 0px 8px 16px rgba(0, 0, 0, 0.8), 0px 4px 6px rgba(0, 0, 0, 0.6);
+            letter-spacing: 0.05em;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Ползунок стилизация */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #475569;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // База данных слов и предложений по темам
+        const db = {
+            food: {
+                id: 'food', name: 'Еда', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80',
+                words: [
+                    { zh: '苹果', py: 'píngguǒ', ru: 'Яблоко' }, { zh: '水', py: 'shuǐ', ru: 'Вода' },
+                    { zh: '面包', py: 'miànbāo', ru: 'Хлеб' }, { zh: '米饭', py: 'mǐfàn', ru: 'Рис' },
+                    { zh: '面条', py: 'miàntiáo', ru: 'Лапша' }, { zh: '肉', py: 'ròu', ru: 'Мясо' },
+                    { zh: '鱼', py: 'yú', ru: 'Рыба' }, { zh: '鸡蛋', py: 'jīdàn', ru: 'Яйцо' },
+                    { zh: '牛奶', py: 'niúnǎi', ru: 'Молоко' }, { zh: '茶', py: 'chá', ru: 'Чай' },
+                    { zh: '咖啡', py: 'kāfēi', ru: 'Кофе' }, { zh: '水果', py: 'shuǐguǒ', ru: 'Фрукты' },
+                    { zh: '蔬菜', py: 'shūcài', ru: 'Овощи' }, { zh: '蛋糕', py: 'dàngāo', ru: 'Торт' },
+                    { zh: '冰淇淋', py: 'bīngqílín', ru: 'Мороженое' }, { zh: '餐厅', py: 'cāntīng', ru: 'Ресторан' },
+                    { zh: '早餐', py: 'zǎocān', ru: 'Завтрак' }, { zh: '午餐', py: 'wǔcān', ru: 'Обед' },
+                    { zh: '晚餐', py: 'wǎncān', ru: 'Ужин' }, { zh: '好吃', py: 'hǎochī', ru: 'Вкусный' }
+                ],
+                sentences: [
+                    { zh: '我喜欢吃苹果。', py: 'Wǒ xǐhuān chī píngguǒ.', ru: 'Я люблю есть яблоки.' },
+                    { zh: '请给我一杯水。', py: 'Qǐng gěi wǒ yī bēi shuǐ.', ru: 'Пожалуйста, дайте мне стакан воды.' },
+                    { zh: '这个面条很好吃。', py: 'Zhège miàntiáo hěn hǎochī.', ru: 'Эта лапша очень вкусная.' },
+                    { zh: '我不吃肉。', py: 'Wǒ bù chī ròu.', ru: 'Я не ем мясо.' },
+                    { zh: '你喝咖啡还是茶？', py: 'Nǐ hē kāfēi háishì chá?', ru: 'Ты пьёшь кофе или чай?' },
+                    { zh: '我们去餐厅吃晚饭。', py: 'Wǒmen qù cāntīng chī wǎnfàn.', ru: 'Мы идем в ресторан ужинать.' },
+                    { zh: '早餐准备好了。', py: 'Zǎocān zhǔnbèi hǎo le.', ru: 'Завтрак готов.' },
+                    { zh: '我想点一份冰淇淋。', py: 'Wǒ xiǎng diǎn yī fèn bīngqílín.', ru: 'Я хочу заказать порцию мороженого.' },
+                    { zh: '他每天喝牛奶。', py: 'Tā měitiān hē niúnǎi.', ru: 'Он каждый день пьет молоко.' },
+                    { zh: '鱼做得很香。', py: 'Yú zuò de hěn xiāng.', ru: 'Рыба приготовлена очень ароматно.' }
+                ]
+            },
+            tech: {
+                id: 'tech', name: 'Техника', image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=600&q=80',
+                words: [
+                    { zh: '电脑', py: 'diànnǎo', ru: 'Компьютер' }, { zh: '手机', py: 'shǒujī', ru: 'Телефон' },
+                    { zh: '屏幕', py: 'píngmù', ru: 'Экран' }, { zh: '键盘', py: 'jiànpán', ru: 'Клавиатура' },
+                    { zh: '鼠标', py: 'shǔbiāo', ru: 'Мышь' }, { zh: '网络', py: 'wǎngluò', ru: 'Интернет' },
+                    { zh: '密码', py: 'mìmǎ', ru: 'Пароль' }, { zh: '软件', py: 'ruǎnjiàn', ru: 'Программа / ПО' },
+                    { zh: '电视', py: 'diànshì', ru: 'Телевизор' }, { zh: '相机', py: 'xiàngjī', ru: 'Камера' },
+                    { zh: '电池', py: 'diànchí', ru: 'Батарея' }, { zh: '充电器', py: 'chōngdiànqì', ru: 'Зарядное устройство' },
+                    { zh: '文件', py: 'wénjiàn', ru: 'Файл' }, { zh: '下载', py: 'xiàzài', ru: 'Скачать' },
+                    { zh: '科技', py: 'kējì', ru: 'Технологии' }, { zh: '耳机', py: 'ěrjī', ru: 'Наушники' }
+                ],
+                sentences: [
+                    { zh: '我的手机没有电了。', py: 'Wǒ de shǒujī méiyǒu diàn le.', ru: 'Мой телефон разрядился.' },
+                    { zh: '我买了一台新电脑。', py: 'Wǒ mǎi le yī tái xīn diànnǎo.', ru: 'Я купил новый компьютер.' },
+                    { zh: '这里的网络不好。', py: 'Zhèlǐ de wǎngluò bù hǎo.', ru: 'Здесь плохой интернет.' },
+                    { zh: '请问无线网密码是多少？', py: 'Qǐngwèn wúxiànwǎng mìmǎ shì duōshǎo?', ru: 'Подскажите пароль от Wi-Fi?' },
+                    { zh: '我需要下载一个软件。', py: 'Wǒ xūyào xiàzài yīgè ruǎnjiàn.', ru: 'Мне нужно скачать одну программу.' },
+                    { zh: '屏幕太亮了。', py: 'Píngmù tài liàng le.', ru: 'Экран слишком яркий.' },
+                    { zh: '你能借我充电器吗？', py: 'Nǐ néng jiè wǒ chōngdiànqì ma?', ru: 'Можешь одолжить зарядку?' },
+                    { zh: '我找不到那个文件。', py: 'Wǒ zhǎo bù dào nàgè wénjiàn.', ru: 'Я не могу найти тот файл.' }
+                ]
+            },
+            communication: {
+                id: 'communication', name: 'Общение', image: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=600&q=80',
+                words: [
+                    { zh: '你好', py: 'nǐ hǎo', ru: 'Привет' }, { zh: '谢谢', py: 'xièxiè', ru: 'Спасибо' },
+                    { zh: '再见', py: 'zàijiàn', ru: 'Пока / До свидания' }, { zh: '对不起', py: 'duìbùqǐ', ru: 'Извините' },
+                    { zh: '没关系', py: 'méi guānxi', ru: 'Ничего страшного' }, { zh: '朋友', py: 'péngyǒu', ru: 'Друг' },
+                    { zh: '名字', py: 'míngzì', ru: 'Имя' }, { zh: '高兴', py: 'gāoxìng', ru: 'Радостный / Рад' },
+                    { zh: '问题', py: 'wèntí', ru: 'Вопрос / Проблема' }, { zh: '帮助', py: 'bāngzhù', ru: 'Помощь' },
+                    { zh: '知道', py: 'zhīdào', ru: 'Знать' }, { zh: '明白', py: 'míngbái', ru: 'Понимать' },
+                    { zh: '说话', py: 'shuōhuà', ru: 'Говорить' }, { zh: '听', py: 'tīng', ru: 'Слушать' }
+                ],
+                sentences: [
+                    { zh: '认识你很高兴。', py: 'Rènshì nǐ hěn gāoxìng.', ru: 'Рад с тобой познакомиться.' },
+                    { zh: '你可以帮我吗？', py: 'Nǐ kěyǐ bāng wǒ ma?', ru: 'Ты можешь мне помочь?' },
+                    { zh: '我不明白你的意思。', py: 'Wǒ bù míngbái nǐ de yìsi.', ru: 'Я не понимаю, что ты имеешь в виду.' },
+                    { zh: '请再说一遍。', py: 'Qǐng zài shuō yī biàn.', ru: 'Пожалуйста, повторите еще раз.' },
+                    { zh: '你叫什么名字？', py: 'Nǐ jiào shénme míngzì?', ru: 'Как тебя зовут?' },
+                    { zh: '没问题，交给我吧。', py: 'Méi wèntí, jiāo gěi wǒ ba.', ru: 'Без проблем, предоставь это мне.' },
+                    { zh: '我不知道他在哪里。', py: 'Wǒ bù zhīdào tā zài nǎlǐ.', ru: 'Я не знаю, где он.' },
+                    { zh: '谢谢你的帮助。', py: 'Xièxiè nǐ de bāngzhù.', ru: 'Спасибо за твою помощь.' }
+                ]
+            },
+            animals: {
+                id: 'animals', name: 'Животные', image: 'https://images.unsplash.com/photo-1474511320723-9a56873864b5?auto=format&fit=crop&w=600&q=80',
+                words: [
+                    { zh: '狗', py: 'gǒu', ru: 'Собака' }, { zh: '猫', py: 'māo', ru: 'Кошка' },
+                    { zh: '鸟', py: 'niǎo', ru: 'Птица' }, { zh: '鱼', py: 'yú', ru: 'Рыба' },
+                    { zh: '马', py: 'mǎ', ru: 'Лошадь' }, { zh: '牛', py: 'niú', ru: 'Корова / Бык' },
+                    { zh: '羊', py: 'yáng', ru: 'Овца' }, { zh: '猪', py: 'zhū', ru: 'Свинья' },
+                    { zh: '熊', py: 'xióng', ru: 'Медведь' }, { zh: '老虎', py: 'lǎohǔ', ru: 'Тигр' },
+                    { zh: '兔子', py: 'tùzi', ru: 'Заяц / Кролик' }, { zh: '大象', py: 'dàxiàng', ru: 'Слон' },
+                    { zh: '猴子', py: 'hóuzi', ru: 'Обезьяна' }, { zh: '宠物', py: 'chǒngwù', ru: 'Питомец' }
+                ],
+                sentences: [
+                    { zh: '我有一只可爱的猫。', py: 'Wǒ yǒu yī zhī kěài de māo.', ru: 'У меня есть милая кошка.' },
+                    { zh: '那只狗很大。', py: 'Nà zhī gǒu hěn dà.', ru: 'Та собака очень большая.' },
+                    { zh: '树上有一只鸟。', py: 'Shù shàng yǒu yī zhī niǎo.', ru: 'На дереве сидит птица.' },
+                    { zh: '我不喜欢老虎。', py: 'Wǒ bù xǐhuān lǎohǔ.', ru: 'Мне не нравятся тигры.' },
+                    { zh: '牛在吃草。', py: 'Niú zài chī cǎo.', ru: 'Корова ест траву.' },
+                    { zh: '水里有很多鱼。', py: 'Shuǐ lǐ yǒu hěn duō yú.', ru: 'В воде много рыб.' },
+                    { zh: '大象的鼻子很长。', py: 'Dàxiàng de bízi hěn cháng.', ru: 'У слона длинный хобот.' },
+                    { zh: '你想养宠物吗？', py: 'Nǐ xiǎng yǎng chǒngwù ma?', ru: 'Ты хочешь завести питомца?' }
+                ]
+            },
+            travel: {
+                id: 'travel', name: 'Путешествия', image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=600&q=80',
+                words: [
+                    { zh: '飞机', py: 'fēijī', ru: 'Самолёт' }, { zh: '火车', py: 'huǒchē', ru: 'Поезд' },
+                    { zh: '汽车', py: 'qìchē', ru: 'Автомобиль' }, { zh: '出租车', py: 'chūzūchē', ru: 'Такси' },
+                    { zh: '酒店', py: 'jiǔdiàn', ru: 'Отель' }, { zh: '房间', py: 'fángjiān', ru: 'Комната' },
+                    { zh: '票', py: 'piào', ru: 'Билет' }, { zh: '行李', py: 'xínglǐ', ru: 'Багаж' },
+                    { zh: '护照', py: 'hùzhào', ru: 'Паспорт' }, { zh: '机场', py: 'jīchǎng', ru: 'Аэропорт' },
+                    { zh: '车站', py: 'chēzhàn', ru: 'Остановка / Вокзал' }, { zh: '地图', py: 'dìtú', ru: 'Карта' },
+                    { zh: '照片', py: 'zhàopiàn', ru: 'Фотография' }, { zh: '旅行', py: 'lǚxíng', ru: 'Путешествие' }
+                ],
+                sentences: [
+                    { zh: '我要去中国旅行。', py: 'Wǒ yào qù Zhōngguó lǚxíng.', ru: 'Я собираюсь в путешествие по Китаю.' },
+                    { zh: '请问车站在哪里？', py: 'Qǐngwèn chēzhàn zài nǎlǐ?', ru: 'Подскажите, где находится вокзал?' },
+                    { zh: '我的行李丢了。', py: 'Wǒ de xínglǐ diū le.', ru: 'Мой багаж потерялся.' },
+                    { zh: '我们需要订一个酒店房间。', py: 'Wǒmen xūyào dìng yīgè jiǔdiàn fángjiān.', ru: 'Нам нужно забронировать номер в отеле.' },
+                    { zh: '请出示你的护照。', py: 'Qǐng chūshì nǐ de hùzhào.', ru: 'Пожалуйста, предъявите ваш паспорт.' },
+                    { zh: '去机场要多长时间？', py: 'Qù jīchǎng yào duō cháng shíjiān?', ru: 'Сколько времени займет дорога в аэропорт?' },
+                    { zh: '我买了两张火车票。', py: 'Wǒ mǎi le liǎng zhāng huǒchē piào.', ru: 'Я купил два билета на поезд.' },
+                    { zh: '帮我拍张照片好吗？', py: 'Bāng wǒ pāi zhāng zhàopiàn hǎo ma?', ru: 'Сфотографируешь меня, пожалуйста?' }
+                ]
+            }
+        };
+
+        // --- Иконки (SVG) ---
+        const IconPlay = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>;
+        const IconPause = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>;
+        const IconPrev = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>;
+        const IconNext = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>;
+        const IconBack = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>;
+        const IconRabbit = () => <span className="text-xl">🐇</span>; // Быстро
+        const IconTurtle = () => <span className="text-xl">🐢</span>; // Медленно
+
+        const App = () => {
+            const [selectedTheme, setSelectedTheme] = useState(null);
+
+            if (!selectedTheme) {
+                return <ThemeSelector onSelect={setSelectedTheme} />;
+            }
+
+            return <LearningScreen theme={db[selectedTheme]} onBack={() => setSelectedTheme(null)} />;
+        };
+
+        const ThemeSelector = ({ onSelect }) => {
+            return (
+                <div className="min-h-screen p-8 max-w-6xl mx-auto fade-in">
+                    <header className="mb-12 text-center">
+                        <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
+                            Изучение Китайского
+                        </h1>
+                        <p className="text-gray-400 text-lg">Выберите тему, чтобы начать бесконечную практику.</p>
+                    </header>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {Object.values(db).map(theme => (
+                            <div 
+                                key={theme.id}
+                                onClick={() => onSelect(theme.id)}
+                                className="group relative rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 h-64"
+                            >
+                                <img src={theme.image} alt={theme.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent"></div>
+                                <div className="absolute bottom-0 left-0 p-6 w-full">
+                                    <h2 className="text-3xl font-bold text-white mb-2">{theme.name}</h2>
+                                    <div className="flex space-x-4 text-sm text-gray-300">
+                                        <span className="bg-gray-800/50 px-2 py-1 rounded backdrop-blur-sm">Слов: 100+</span>
+                                        <span className="bg-gray-800/50 px-2 py-1 rounded backdrop-blur-sm">Предложений: 100+</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const LearningScreen = ({ theme, onBack }) => {
+            const [mode, setMode] = useState('words'); // 'words' или 'sentences'
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [speed, setSpeed] = useState(2.5); // Секунды
+            const [fadeKey, setFadeKey] = useState(0); // Для анимации смены текста
+            
+            // Расширяем базу для имитации "100+" для пользователя, повторяя массив (в реальной версии тут просто большой массив)
+            const items = mode === 'words' ? theme.words : theme.sentences;
+            
+            useEffect(() => {
+                let interval;
+                if (isPlaying) {
+                    interval = setInterval(() => {
+                        handleNext();
+                    }, speed * 1000);
+                }
+                return () => clearInterval(interval);
+            }, [isPlaying, speed, currentIndex, mode]);
+
+            const handleNext = () => {
+                setCurrentIndex(prev => (prev + 1) % items.length);
+                setFadeKey(prev => prev + 1);
+            };
+
+            const handlePrev = () => {
+                setCurrentIndex(prev => (prev - 1 + items.length) % items.length);
+                setFadeKey(prev => prev + 1);
+            };
+
+            const togglePlay = () => setIsPlaying(!isPlaying);
+
+            // Аудио функции
+            const playAudio = (text, isSlow = false) => {
+                if (mode === 'words') {
+                    // API Youdao для слов (отлично работает для коротких фраз)
+                    const audioUrl = `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(text)}&le=zh`;
+                    const audio = new Audio(audioUrl);
+                    if (isSlow) audio.playbackRate = 0.5;
+                    audio.play().catch(e => console.log("Audio play prevented by browser", e));
+                } else {
+                    // Встроенный TTS для предложений
+                    if ('speechSynthesis' in window) {
+                        window.speechSynthesis.cancel(); // Остановка текущего
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = 'zh-CN';
+                        utterance.rate = isSlow ? 0.5 : 0.9;
+                        window.speechSynthesis.speak(utterance);
+                    } else {
+                        alert("Ваш браузер не поддерживает чтение текста (TTS).");
+                    }
+                }
+            };
+
+            const currentItem = items[currentIndex];
+
+            return (
+                <div className="flex flex-col min-h-screen">
+                    {/* Верхняя панель */}
+                    <header className="p-4 flex items-center justify-between bg-gray-800 shadow-md relative z-10">
+                        <button onClick={onBack} className="p-2 hover:bg-gray-700 rounded-full transition text-gray-300">
+                            <IconBack />
+                        </button>
+                        <h2 className="text-xl font-bold text-blue-400">{theme.name}</h2>
+                        
+                        {/* Переключатель Слова/Предложения */}
+                        <div className="flex bg-gray-900 rounded-lg p-1">
+                            <button 
+                                onClick={() => { setMode('words'); setCurrentIndex(0); setFadeKey(k=>k+1); }}
+                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${mode === 'words' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                            >
+                                Слова
+                            </button>
+                            <button 
+                                onClick={() => { setMode('sentences'); setCurrentIndex(0); setFadeKey(k=>k+1); }}
+                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${mode === 'sentences' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                            >
+                                Предложения
+                            </button>
+                        </div>
+                    </header>
+
+                    {/* Главная карточка (Слова) */}
+                    <main className="flex-1 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+                        {/* Фоновое размытое изображение темы */}
+                        <div 
+                            className="absolute inset-0 opacity-10 blur-xl scale-110"
+                            style={{ backgroundImage: `url(${theme.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+                        ></div>
+                        
+                        <div key={fadeKey} className="fade-in flex flex-col items-center z-10 w-full max-w-4xl">
+                            
+                            {/* Китайский текст и кнопки озвучки */}
+                            <div className="flex items-center justify-center mb-6 relative">
+                                <h1 className="zh-text text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold text-white mb-2 leading-tight">
+                                    {currentItem.zh}
+                                </h1>
+                                
+                                <div className="absolute -right-16 md:-right-24 flex flex-col gap-3">
+                                    <button onClick={() => playAudio(currentItem.zh, false)} className="p-3 bg-blue-600 hover:bg-blue-500 rounded-full shadow-lg transition transform hover:scale-110 tooltip-container group">
+                                        <IconRabbit />
+                                        <span className="absolute left-full ml-2 w-max bg-gray-800 text-xs text-white p-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none">Быстро</span>
+                                    </button>
+                                    <button onClick={() => playAudio(currentItem.zh, true)} className="p-3 bg-emerald-600 hover:bg-emerald-500 rounded-full shadow-lg transition transform hover:scale-110 tooltip-container group">
+                                        <IconTurtle />
+                                        <span className="absolute left-full ml-2 w-max bg-gray-800 text-xs text-white p-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none">Медленно</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Пиньинь */}
+                            <p className="text-3xl md:text-4xl text-emerald-400 font-semibold mb-8 drop-shadow-md">
+                                {currentItem.py}
+                            </p>
+
+                            {/* Перевод */}
+                            <p className="text-4xl md:text-5xl text-gray-200 font-medium drop-shadow-md">
+                                {currentItem.ru}
+                            </p>
+                        </div>
+                    </main>
+
+                    {/* Панель управления снизу */}
+                    <footer className="bg-gray-800 p-6 shadow-xl relative z-10">
+                        <div className="max-w-2xl mx-auto flex flex-col items-center gap-6">
+                            
+                            {/* Навигация */}
+                            <div className="flex items-center gap-8">
+                                <button onClick={handlePrev} className="p-4 bg-gray-700 hover:bg-gray-600 rounded-full transition shadow text-white">
+                                    <IconPrev />
+                                </button>
+                                
+                                <button onClick={togglePlay} className={`p-6 rounded-full transition shadow-xl text-white transform hover:scale-105 ${isPlaying ? 'bg-red-500 hover:bg-red-400' : 'bg-blue-600 hover:bg-blue-500'}`}>
+                                    {isPlaying ? <IconPause /> : <IconPlay />}
+                                </button>
+                                
+                                <button onClick={handleNext} className="p-4 bg-gray-700 hover:bg-gray-600 rounded-full transition shadow text-white">
+                                    <IconNext />
+                                </button>
+                            </div>
+
+                            {/* Ползунок времени */}
+                            <div className="w-full flex items-center gap-4 bg-gray-900 p-4 rounded-xl">
+                                <span className="text-sm font-bold text-gray-400 w-12 text-right">0.5s</span>
+                                <input 
+                                    type="range" 
+                                    min="0.5" max="5" step="0.5" 
+                                    value={speed}
+                                    onChange={(e) => setSpeed(parseFloat(e.target.value))}
+                                />
+                                <span className="text-sm font-bold text-blue-400 w-16">{speed}s</span>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
