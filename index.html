@@ -2,14 +2,19 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Китайский Язык: Бесконечная Практика</title>
+    
     <!-- Подключение React и Babel для JSX -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <!-- Подключение Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         /* Интуитивно приятный шрифт и тени для подсознательного запоминания */
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@500;700;900&family=Nunito:wght@400;700&display=swap');
@@ -19,6 +24,9 @@
             background-color: #0f172a;
             color: white;
             overflow-x: hidden;
+            /* Предотвращение выделения текста на мобильных устройствах при долгом тапе */
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .zh-text {
@@ -60,6 +68,62 @@
             border-radius: 4px;
         }
     </style>
+
+    <!-- PWA Инъекция (Манифест и Service Worker создаются на лету) -->
+    <script>
+        // 1. Создаем Manifest.json
+        const manifestData = {
+            "name": "Китайский Язык: Бесконечная Практика",
+            "short_name": "Китайский",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#0f172a",
+            "theme_color": "#0f172a",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzBmMTcyYSIvPjx0ZXh0IHg9IjUwIiB5PSI2MCIgZm9udC1mYW1pbHk9ImFyaWFsIiBmb250LXNpemU9IjUwIiBmaWxsPSIjM2I4MmY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7kuK08L3RleHQ+PC9zdmc+",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                },
+                {
+                    "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzBmMTcyYSIvPjx0ZXh0IHg9IjUwIiB5PSI2MCIgZm9udC1mYW1pbHk9ImFyaWFsIiBmb250LXNpemU9IjUwIiBmaWxsPSIjM2I4MmY2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj7kuK08L3RleHQ+PC9zdmc+",
+                    "sizes": "512x512",
+                    "type": "image/svg+xml"
+                }
+            ]
+        };
+
+        const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+        
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = manifestUrl;
+        document.head.appendChild(manifestLink);
+
+        // 2. Создаем и регистрируем простой Service Worker (необходим для PWA статуса)
+        const swCode = `
+            self.addEventListener('install', (e) => {
+                self.skipWaiting();
+            });
+            self.addEventListener('activate', (e) => {
+                e.waitUntil(clients.claim());
+            });
+            self.addEventListener('fetch', (e) => {
+                // Пустой fetch обработчик для прохождения проверок PWA
+            });
+        `;
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(swBlob);
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register(swUrl).catch(err => {
+                    console.log('SW registration failed: ', err);
+                });
+            });
+        }
+    </script>
 </head>
 <body>
     <div id="root"></div>
@@ -209,11 +273,11 @@
         const ThemeSelector = ({ onSelect }) => {
             return (
                 <div className="min-h-screen p-4 sm:p-8 max-w-6xl mx-auto fade-in">
-                    <header className="mb-8 sm:mb-12 text-center">
+                    <header className="mb-8 sm:mb-12 text-center mt-4">
                         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">
                             Изучение Китайского
                         </h1>
-                        <p className="text-gray-400 text-sm sm:text-lg">Выберите тему, чтобы начать бесконечную практику.</p>
+                        <p className="text-gray-400 text-sm sm:text-lg">Выберите тему, чтобы начать практику.</p>
                     </header>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -246,7 +310,7 @@
             const [speed, setSpeed] = useState(2.5); // Секунды
             const [fadeKey, setFadeKey] = useState(0); // Для анимации смены текста
             
-            // Расширяем базу для имитации "100+" для пользователя, повторяя массив (в реальной версии тут просто большой массив)
+            // Расширяем базу для имитации "100+" для пользователя
             const items = mode === 'words' ? theme.words : theme.sentences;
             
             useEffect(() => {
@@ -274,21 +338,21 @@
             // Аудио функции
             const playAudio = (text, isSlow = false) => {
                 if (mode === 'words') {
-                    // API Youdao для слов (отлично работает для коротких фраз)
+                    // API Youdao для слов
                     const audioUrl = `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(text)}&le=zh`;
                     const audio = new Audio(audioUrl);
                     if (isSlow) audio.playbackRate = 0.5;
-                    audio.play().catch(e => console.log("Audio play prevented by browser", e));
+                    audio.play().catch(e => console.log("Audio play prevented", e));
                 } else {
                     // Встроенный TTS для предложений
                     if ('speechSynthesis' in window) {
-                        window.speechSynthesis.cancel(); // Остановка текущего
+                        window.speechSynthesis.cancel(); 
                         const utterance = new SpeechSynthesisUtterance(text);
                         utterance.lang = 'zh-CN';
                         utterance.rate = isSlow ? 0.5 : 0.9;
                         window.speechSynthesis.speak(utterance);
                     } else {
-                        alert("Ваш браузер не поддерживает чтение текста (TTS).");
+                        alert("Ваш браузер не поддерживает чтение текста.");
                     }
                 }
             };
@@ -338,13 +402,11 @@
                                 </h1>
                                 
                                 <div className="flex flex-row md:flex-col gap-3 sm:gap-4 mt-6 md:mt-0 md:absolute md:-right-16 lg:-right-24">
-                                    <button onClick={() => playAudio(currentItem.zh, false)} className="p-3 sm:p-4 bg-blue-600 hover:bg-blue-500 rounded-full shadow-lg transition transform hover:scale-110 tooltip-container group">
+                                    <button onClick={() => playAudio(currentItem.zh, false)} className="p-3 sm:p-4 bg-blue-600 hover:bg-blue-500 rounded-full shadow-lg transition transform hover:scale-110">
                                         <IconRabbit />
-                                        <span className="absolute left-full ml-2 w-max bg-gray-800 text-xs text-white p-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none hidden md:block">Быстро</span>
                                     </button>
-                                    <button onClick={() => playAudio(currentItem.zh, true)} className="p-3 sm:p-4 bg-emerald-600 hover:bg-emerald-500 rounded-full shadow-lg transition transform hover:scale-110 tooltip-container group">
+                                    <button onClick={() => playAudio(currentItem.zh, true)} className="p-3 sm:p-4 bg-emerald-600 hover:bg-emerald-500 rounded-full shadow-lg transition transform hover:scale-110">
                                         <IconTurtle />
-                                        <span className="absolute left-full ml-2 w-max bg-gray-800 text-xs text-white p-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none hidden md:block">Медленно</span>
                                     </button>
                                 </div>
                             </div>
@@ -362,7 +424,7 @@
                     </main>
 
                     {/* Панель управления снизу */}
-                    <footer className="bg-gray-800 p-4 sm:p-6 shadow-xl relative z-10 w-full">
+                    <footer className="bg-gray-800 p-4 sm:p-6 shadow-xl relative z-10 w-full pb-8 sm:pb-6">
                         <div className="max-w-2xl mx-auto flex flex-col items-center gap-4 sm:gap-6 w-full">
                             
                             {/* Навигация */}
